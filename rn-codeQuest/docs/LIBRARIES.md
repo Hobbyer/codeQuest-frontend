@@ -10,13 +10,10 @@ npm install react-native-screens react-native-safe-area-context
 npm install @react-native-async-storage/async-storage
 npm install axios
 npm install react-native-vector-icons
+npm install react-native-haptic-feedback
+npx expo install expo-haptics
 npm install react-native-toast-message
 npm install react-native-keychain
 npm install react-native-mmkv
 npm install react-native-device-info
 npm install @react-navigation/native-stack
-
-npm install @react-native-google-signin/google-signin
-npm install @react-native-seoul/kakao-login
-npm install @react-native-seoul/naver-login
-npm install @invertase/react-native-apple-authentication
