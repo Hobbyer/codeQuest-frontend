@@ -17,3 +17,8 @@ npm install react-native-keychain
 npm install react-native-mmkv
 npm install react-native-device-info
 npm install @react-navigation/native-stack
+
+npm install @react-native-google-signin/google-signin
+npm install @react-native-seoul/kakao-login
+npm install @react-native-seoul/naver-login
+npm install @invertase/react-native-apple-authentication
