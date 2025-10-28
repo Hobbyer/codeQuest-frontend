@@ -104,11 +104,11 @@ export const AuthProvider = ({ children }) => {
         device_name: deviceInfo?.deviceName,
       });
 
-      const {access, user: userData} = response;
+      const {access, refresh, user: userData} = response;
 
       if (access && userData) {
         // 토큰과 사용자 정보 저장
-        await Storage.setSecure('AUTH_TOKENS', { accessToken: access });
+        await Storage.setSecure('AUTH_TOKENS', { accessToken: access, refreshToken: refresh, timestamp: Date.now() });
         await Storage.setUserInfo(userData);
 
         // 상태 업데이트
