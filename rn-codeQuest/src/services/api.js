@@ -8,10 +8,10 @@ const getBaseURL = () => {
   if (__DEV__) { // 개발 모드
     if (Platform.OS === 'android'){
       // Android 에뮬레이터에서 localhost 접근
-      return 'http://10.0.2.2:8000/api';
+      return 'http://10.0.2.2:8000';
     } else if (Platform.OS === 'ios') {
       // iOS 시뮬레이터에서 localhost 접근
-      return 'http://localhost:8000/api';
+      return 'http://localhost:8000';
     } else {
       // 실제 기기 또는 expo
       return API_BASE_URL;
