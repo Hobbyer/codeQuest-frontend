@@ -1,9 +1,8 @@
 // src/screens/home/HomeScreen.js
 import React, { useContext } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Button, Title, Card, ActivityIndicator, Text } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
-import { ScrollView } from 'react-native-web';
 
 export default function HomeScreen({ navigation }) {
   const { user, logout, isAuthenticated, isLoading } = useAuth();
