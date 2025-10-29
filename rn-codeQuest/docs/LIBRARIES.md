@@ -22,3 +22,5 @@ npm install @react-native-google-signin/google-signin
 npm install @react-native-seoul/kakao-login
 npm install @react-native-seoul/naver-login
 npm install @invertase/react-native-apple-authentication
+
+expo install expo-constants

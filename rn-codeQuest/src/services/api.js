@@ -2,20 +2,25 @@ import axios from 'axios';
 import { Alert, Platform } from 'react-native';
 import { API_BASE_URL } from '../utils/constants';
 import { Storage } from './storages'; // storages/index.js
+import Constants from 'expo-constants';
 
 // 환경별 Base URL 설정
 const getBaseURL = () => {
-  if (__DEV__) { // 개발 모드
-    if (Platform.OS === 'android'){
-      // Android 에뮬레이터에서 localhost 접근
+  if (__DEV__) {
+    // 개발 환경
+    if (Platform.OS === 'android' && !Constants.isDevice) {
+      // Android 에뮬레이터만 10.0.2.2 사용
       return 'http://10.0.2.2:8000';
-    } else if (Platform.OS === 'ios') {
-      // iOS 시뮬레이터에서 localhost 접근
+    } else if (Platform.OS === 'ios' && !Constants.isDevice) {
+      // iOS 시뮬레이터만 localhost 사용
       return 'http://localhost:8000';
     } else {
-      // 실제 기기 또는 expo
-      return API_BASE_URL;
+      // 실제 디바이스들은 모두 실제 IP 사용
+      return 'http://192.168.0.24:8000';
     }
+  } else {
+    // 프로덕션 환경
+    return 'https://your-production-domain.com';
   }
 };
 
