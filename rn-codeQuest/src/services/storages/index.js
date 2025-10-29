@@ -111,4 +111,4 @@ class StorageManager {
   }
 }
 
-export default Storage = new StorageManager();
+export const Storage = new StorageManager();
