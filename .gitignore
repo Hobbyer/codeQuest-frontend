@@ -3,6 +3,10 @@
 # dependencies
 node_modules/
 
+# github
+*.github/
+.github/
+
 # Expo
 .expo/
 dist/

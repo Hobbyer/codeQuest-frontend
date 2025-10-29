@@ -9,7 +9,7 @@ if (Platform.OS !== 'web') {
   try {
     DeviceInfo = require('react-native-device-info');
   } catch (error) {
-    console.warn('DeviceInfo 모듈 없음');
+    console.warn('DeviceInfo 모듈 없음 - Expo Go 환경에서는 fallback 사용');
   }
 }
 
@@ -57,6 +57,11 @@ export class DeviceInfoService {
   // 네이티브 환경용 디바이스 정보
   static async getNativeDeviceInfo() {
     try {
+      // DeviceInfo 모듈이 없으면 fallback 사용 (Expo Go 환경)
+      if (!DeviceInfo) {
+        return await this.getExpoFallbackDeviceInfo();
+      }
+
       const [deviceId, deviceName] = await Promise.all([
         DeviceInfo.getUniqueId(),
         DeviceInfo.getDeviceName()
@@ -76,7 +81,51 @@ export class DeviceInfoService {
       };
     } catch (error) {
       console.error('디바이스 정보 조회 실패:', error);
+      // 에러 시에도 fallback 사용
+      return await this.getExpoFallbackDeviceInfo();
+    }
+  }
+
+  // Expo Go용 fallback 디바이스 정보
+  static async getExpoFallbackDeviceInfo() {
+    try {
+      // Expo Go에서 사용할 수 있는 기본적인 디바이스 정보
+      const deviceId = await this.getOrCreateMobileDeviceId();
+      
+      return {
+        deviceId,
+        deviceName: `${Platform.OS} Device`,
+        model: Platform.OS === 'ios' ? 'iPhone' : 'Android Device',
+        brand: Platform.OS === 'ios' ? 'Apple' : 'Android',
+        systemName: Platform.OS === 'ios' ? 'iOS' : 'Android',
+        systemVersion: 'Unknown',
+        appVersion: 'Expo v1.0.0',
+        isTablet: false,
+        isEmulator: true, // Expo Go는 시뮬레이터로 간주
+        platform: Platform.OS,
+      };
+    } catch (error) {
+      console.error('Expo fallback 디바이스 정보 조회 실패:', error);
       return null;
+    }
+  }
+
+  // 모바일용 고유 디바이스 ID 생성/조회
+  static async getOrCreateMobileDeviceId() {
+    try {
+      let deviceId = await Storage.getData('MOBILE_DEVICE_ID');
+      if (!deviceId) {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 9);
+        deviceId = `${Platform.OS}_${timestamp}_${random}`;
+
+        await Storage.setData('MOBILE_DEVICE_ID', deviceId);
+      }
+      return deviceId;
+      
+    } catch (error) {
+      console.error('모바일 디바이스 ID 생성/조회 실패:', error);
+      return `${Platform.OS}_${Date.now()}`;
     }
   }
 
