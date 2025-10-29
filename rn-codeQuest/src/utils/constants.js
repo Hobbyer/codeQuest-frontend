@@ -1,5 +1,5 @@
 // API Base URL
-export const API_BASE_URL = API_BASE_URL = 'http://172.28.192.1:8000'; // Kim's Local IP
+export const API_BASE_URL = 'http://172.28.192.1:8000'; // Kim's Local IP
 
 // export const API_BASE_URL = 'https://codequest.co.kr'; // 실제 운영 서버
 
