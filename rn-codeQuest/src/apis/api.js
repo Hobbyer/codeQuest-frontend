@@ -2,7 +2,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { Alert, Platform } from 'react-native';
 import { API_BASE_URL } from '../utils/constants';
-import { Storage } from './storages'; // storages/index.js
+import { Storage } from '../services/storages'; // storages/index.js
 
 // 환경별 Base URL 설정
 const getBaseURL = () => {

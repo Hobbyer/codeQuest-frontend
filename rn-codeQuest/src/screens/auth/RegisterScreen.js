@@ -1,7 +1,7 @@
 import { Alert, StyleSheet, Text, View } from 'react-native'
 import React, { useState } from 'react'
 import { Button, TextInput, Title } from 'react-native-paper'
-import api from '../../services/api';
+import api from '../../apis/api';
 
 const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');

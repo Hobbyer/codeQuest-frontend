@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '../apis/api';
 import { Alert } from 'react-native';
 import { Storage } from '../services/storages'; // storages/index.js
 import { DeviceInfoService } from '../services/DeviceInfo';

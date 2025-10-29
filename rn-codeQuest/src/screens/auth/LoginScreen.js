@@ -4,7 +4,7 @@ import { Button, Card, TextInput } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext.js'
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import api from '../../services/api.js';
+import api from '../../apis/api';
 
 const LoginScreen = () => {
   const { login, isLoading, user } = useAuth();
