@@ -1,27 +1,22 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
 import { Alert, Platform } from 'react-native';
 import { API_BASE_URL } from '../utils/constants';
 import { Storage } from './storages'; // storages/index.js
-import Constants from 'expo-constants';
 
 // 환경별 Base URL 설정
 const getBaseURL = () => {
+  // 개발 환경에서만 에뮬레이터 특수 처리, 나머지는 모두 API_BASE_URL
   if (__DEV__) {
-    // 개발 환경
-    if (Platform.OS === 'android' && !Constants.isDevice) {
-      // Android 에뮬레이터만 10.0.2.2 사용
-      return 'http://10.0.2.2:8000';
-    } else if (Platform.OS === 'ios' && !Constants.isDevice) {
-      // iOS 시뮬레이터만 localhost 사용
-      return 'http://localhost:8000';
-    } else {
-      // 실제 디바이스들은 모두 실제 IP 사용
-      return 'http://192.168.0.24:8000';
+    if (Platform.OS === 'android' && Constants.isDevice === false) {
+      return 'http://10.0.2.2:8000'; // Android 에뮬레이터
     }
-  } else {
-    // 프로덕션 환경
-    return 'https://your-production-domain.com';
+    if (Platform.OS === 'ios' && Constants.isDevice === false) {
+      return 'http://localhost:8000'; // iOS 시뮬레이터
+    }
   }
+  
+  return API_BASE_URL; // 실제 기기, 프로덕션
 };
 
 // API 기본 설정
@@ -53,11 +48,6 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터: 에러 처리
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('📥 API 응답 성공:', {
-      status: response.status,
-      url: response.config.url,
-      data: response.data
-    });
     return response.data;
   },
   (error) => {
