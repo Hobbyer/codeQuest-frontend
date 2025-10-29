@@ -1,7 +1,7 @@
 // import DeviceInfo from "react-native-device-info";
 
 import { Platform } from 'react-native';
-import Storage from '../services/storages'; // storages/index.js
+import { Storage } from './storages'; // storages/index.js
 
 // 네이티브 환경에서만 DeviceInfo 모듈 로드
 let DeviceInfo = null;
