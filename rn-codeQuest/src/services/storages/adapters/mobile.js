@@ -11,8 +11,7 @@ try {
 }
 
 try {
-  const { MMKV } = require('react-native-mmkv');
-  mmkv = new MMKV();  // 기본 인스턴스 생성
+  mmkv = require('react-native-mmkv');
 } catch (error) {
   console.warn('MMKV 모듈 없음');
 }
