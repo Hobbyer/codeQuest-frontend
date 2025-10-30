@@ -81,6 +81,18 @@ const RegisterScreen = ({ navigation }) => {
       >
         회원가입
       </Button>
+
+      {/* 로그인 링크 */}
+      <View style={styles.loginContainer}>
+        <Text style={styles.loginText}>이미 계정이 있으신가요? </Text>
+        <Button 
+          mode="text"
+          onPress={() => navigation.navigate('Login')}
+          style={styles.loginButton}
+        >
+          로그인
+        </Button>
+      </View>
     </View>
   )
 }
@@ -106,5 +118,18 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 10,
     paddingVertical: 8,
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  loginText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  loginButton: {
+    marginLeft: -8, // Paper Button의 기본 패딩 조정
   },
 })

@@ -10,7 +10,7 @@ import * as WebBrowser from 'expo-web-browser';
 // OAuth 완료 후 브라우저 자동 닫기 설정
 WebBrowser.maybeCompleteAuthSession();
 
-const LoginScreen = () => {
+const LoginScreen = ({ navigation }) => {
   const { login, socialLogin, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,9 +20,9 @@ const LoginScreen = () => {
   // ===================================
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID_DEV,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID_DEV,
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
   });
 
   // 디버깅: 실제 request 정보 출력
@@ -46,7 +46,7 @@ const LoginScreen = () => {
       handleGoogleLogin(authentication.accessToken);
 
     } else if (response?.type === 'error') {
-      console.error('💥 Google 로그인 에러:', response.error);
+      console.error('Google 로그인 에러:', response.error);
       Alert.alert('로그인 실패', 'Google 로그인 중 오류가 발생했습니다.');
     }
   }, [response]);
@@ -56,7 +56,7 @@ const LoginScreen = () => {
     const result = await login(email, password);
     if (result.success) {
       // 홈탭으로 자동 이동
-      // navigation.navigate('Home');
+      navigation.navigate('Home');
     } else {
       console.log('아이디와 비밀번호를 확인하세요.');
       Alert.alert('실패', '아이디와 비밀번호를 확인하세요.');
@@ -65,15 +65,15 @@ const LoginScreen = () => {
 
   // Google 로그인 처리
   const handleGoogleLogin = async (googleAccessToken) => {
-    console.log('🔵 Google 로그인 처리 시작');
     
     const result = await socialLogin('google', googleAccessToken);
     
     if (result.success) {
-      console.log('✅ Google 로그인 완료!', result.user);
       // 성공하면 AuthContext에서 자동으로 상태 업데이트됨
+      navigation.navigate('Home');
     } else {
-      console.error('❌ Google 로그인 실패:', result.error);
+      console.error('Google 로그인 실패:', result.error);
+      Alert.alert('로그인 실패', result.error || 'Google 로그인에 실패했습니다.');
     }
   };
 
@@ -153,6 +153,14 @@ const LoginScreen = () => {
           >
             <Text style={styles.socialButtonText}>🟢 Naver로 로그인</Text>
           </TouchableOpacity>
+
+          {/* 회원가입 링크 */}
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>아직 계정이 없으신가요? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.registerLink}>회원가입</Text>
+            </TouchableOpacity>
+          </View>
         </Card.Content>
       </Card>
     </View>
@@ -230,5 +238,21 @@ const styles = StyleSheet.create({
   // Naver 버튼
   naverButton: {
     backgroundColor: '#03C75A',
+  },
+  // 회원가입 링크
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  registerText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  registerLink: {
+    fontSize: 14,
+    color: '#6200ee',
+    fontWeight: '600',
   },
 });

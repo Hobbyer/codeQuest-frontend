@@ -4,6 +4,7 @@ import api from '../apis/api';
 import { Alert } from 'react-native';
 import { Storage } from '../services/storages'; // storages/index.js
 import { DeviceInfoService } from '../services/DeviceInfo';
+import * as SocialLogin from '../apis/socialLogin'; // 소셜 로그인 API 추가
 
 // ===================================
 // Context API : 전역 상태 관리
@@ -52,8 +53,6 @@ export const AuthProvider = ({ children }) => {
 
       if (token && userInfo) {
         try {
-          
-          console.log('✅ 자동 로그인 성공:', userInfo.nickname);
           
           // 상태 복원
           setUser(userInfo);
@@ -131,6 +130,65 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ===================================
+  // 소셜 로그인 함수 (Google, Kakao, Naver)
+  // ===================================
+  const socialLogin = async (provider, token) => {
+    setIsLoading(true);
+
+    try {
+      console.log(`🔐 ${provider} 소셜 로그인 시작`);
+
+      // 1. provider에 따라 적절한 함수 호출
+      let result;
+      
+      if (provider === 'google') {
+        result = await SocialLogin.loginWithGoogle(token);
+      } else if (provider === 'kakao') {
+        result = await SocialLogin.loginWithKakao(token);
+      } else if (provider === 'naver') {
+        result = await SocialLogin.loginWithNaver(token);
+      } else if (provider === 'apple') {
+        result = await SocialLogin.loginWithApple(token);
+      } else {
+        return { success: false, error: '지원하지 않는 소셜 로그인입니다.' };
+      }
+
+      // 2. 성공했으면 토큰과 사용자 정보 저장
+      if (result.success) {
+        
+        // 토큰 저장
+        await Storage.setSecure('AUTH_TOKENS', { 
+          accessToken: result.accessToken, 
+          refreshToken: result.refreshToken, 
+          timestamp: Date.now() 
+        });
+        
+        // 사용자 정보 저장
+        await Storage.setUserInfo(result.user);
+
+        // 상태 업데이트
+        setUser(result.user);
+        setIsAuthenticated(true);
+
+        Alert.alert('로그인 성공', `환영합니다, ${result.user.nickname}님!`);
+
+        return { success: true, user: result.user };
+      } else {
+        // 실패
+        Alert.alert('로그인 실패', result.error);
+        return { success: false, error: result.error };
+      }
+
+    } catch (error) {
+      console.error('💥 소셜 로그인 에러:', error.message);
+      Alert.alert('로그인 실패', '소셜 로그인 중 오류가 발생했습니다.');
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       // Storage에서 데이터 삭제
@@ -165,9 +223,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, checkAutoLogin, refreshUserData }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      isLoading, 
+      login, 
+      socialLogin,  // 소셜 로그인 함수 추가
+      logout, 
+      checkAutoLogin, 
+      refreshUserData 
+    }}>
       {children}
     </AuthContext.Provider>
   );
