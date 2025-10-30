@@ -24,3 +24,7 @@ npm install @react-native-seoul/naver-login
 npm install @invertase/react-native-apple-authentication
 
 expo install expo-constants
+npm install expo-constants
+npm install expo-auth-session expo-crypto
+npm install expo-web-browser
+npm install -g eas-cli
