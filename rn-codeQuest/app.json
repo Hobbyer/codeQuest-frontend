@@ -2,6 +2,8 @@
   "expo": {
     "name": "rn-codeQuest",
     "slug": "rn-codeQuest",
+    "owner": "codequest-team",
+    "scheme": "rn-codequest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,9 +15,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.codequestteam.codequest",
+      "buildNumber": "1.0.0",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.codequestteam.codequest",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
