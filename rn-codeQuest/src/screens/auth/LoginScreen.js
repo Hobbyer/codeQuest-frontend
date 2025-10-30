@@ -1,80 +1,36 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, Card, TextInput, Divider } from 'react-native-paper';
-import { useAuth } from '../../context/AuthContext.js'
-import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Alert } from 'react-native';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
 
-// OAuth 완료 후 브라우저 자동 닫기 설정
-WebBrowser.maybeCompleteAuthSession();
+// Google 로그인 컴포넌트 import
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 
 const LoginScreen = ({ navigation }) => {
-  const { login, socialLogin, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // ===================================
-  // Google OAuth 설정 (Expo Go용)
-  // ===================================
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  });
-
-  // 디버깅: 실제 request 정보 출력
-  useEffect(() => {
-    if (request) {
-      console.log('✅ Google OAuth 준비 완료');
-      console.log('   Client ID:', request.clientId);
-      console.log('   Redirect URI:', request.redirectUri);
-      console.log('   Request URL:', request.url);
-    }
-  }, [request]);
-
-  // ===================================
-  // Google 로그인 응답 처리
-  // ===================================
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      
-      // 받은 토큰으로 우리 백엔드에 로그인
-      handleGoogleLogin(authentication.accessToken);
-
-    } else if (response?.type === 'error') {
-      console.error('Google 로그인 에러:', response.error);
-      Alert.alert('로그인 실패', 'Google 로그인 중 오류가 발생했습니다.');
-    }
-  }, [response]);
 
   // 일반 로그인
   const handleLogin = async () => {
     const result = await login(email, password);
     if (result.success) {
-      // 홈탭으로 자동 이동
-      navigation.navigate('Home');
+      navigation.navigate('Profile');
     } else {
-      console.log('아이디와 비밀번호를 확인하세요.');
       Alert.alert('실패', '아이디와 비밀번호를 확인하세요.');
     }
   };
 
-  // Google 로그인 처리
-  const handleGoogleLogin = async (googleAccessToken) => {
-    
-    const result = await socialLogin('google', googleAccessToken);
-    
-    if (result.success) {
-      // 성공하면 AuthContext에서 자동으로 상태 업데이트됨
-      navigation.navigate('Home');
-    } else {
-      console.error('Google 로그인 실패:', result.error);
-      Alert.alert('로그인 실패', result.error || 'Google 로그인에 실패했습니다.');
-    }
+  // Google 로그인 성공 시 콜백
+  const handleGoogleSuccess = (result) => {
+    // 성공 시 추가 로직 (필요하면)
+    // AppNavigator가 자동으로 ProfileScreen 렌더링
+  };
+
+  // Google 로그인 실패 시 콜백
+  const handleGoogleError = (error) => {
+    // 에러 처리 (필요하면)
   };
 
   // Kakao, Naver 로그인 (나중에 구현)
@@ -127,14 +83,12 @@ const LoginScreen = ({ navigation }) => {
           {/* 소셜 로그인 버튼들 */}
           <Text style={styles.socialTitle}>소셜 로그인</Text>
 
-          {/* Google 버튼 */}
-          <TouchableOpacity
-            style={[styles.socialButton, styles.googleButton]}
-            onPress={() => promptAsync()} // Google OAuth 팝업 열기
-            disabled={isLoading || !request} // request 준비 안 되면 비활성화
-          >
-            <Text style={styles.socialButtonText}>🔵 Google로 로그인</Text>
-          </TouchableOpacity>
+          {/* Google 버튼 - 분리된 컴포넌트 사용 */}
+          <GoogleLoginButton 
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            disabled={isLoading}
+          />
 
           {/* Kakao 버튼 */}
           <TouchableOpacity
@@ -142,7 +96,9 @@ const LoginScreen = ({ navigation }) => {
             onPress={() => handleSocialLogin('Kakao')}
             disabled={isLoading}
           >
-            <Text style={[styles.socialButtonText, styles.kakaoText]}>💬 Kakao로 로그인</Text>
+            <Text style={[styles.socialButtonText, styles.kakaoText]}>
+              💬 Kakao로 로그인
+            </Text>
           </TouchableOpacity>
 
           {/* Naver 버튼 */}
@@ -167,7 +123,6 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-
 export default LoginScreen;
 
 const styles = StyleSheet.create({
@@ -188,7 +143,6 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 8,
   },
-  // 구분선 스타일
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -202,14 +156,12 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
-  // 소셜 로그인 제목
   socialTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
     color: '#333',
   },
-  // 소셜 버튼 공통 스타일
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -224,22 +176,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Google 버튼
-  googleButton: {
-    backgroundColor: '#4285F4',
-  },
-  // Kakao 버튼
   kakaoButton: {
     backgroundColor: '#FEE500',
   },
   kakaoText: {
-    color: '#3C1E1E', // Kakao는 노란 배경에 검정 글씨
+    color: '#3C1E1E',
   },
-  // Naver 버튼
   naverButton: {
     backgroundColor: '#03C75A',
   },
-  // 회원가입 링크
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
