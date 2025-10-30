@@ -21,9 +21,6 @@ const GoogleLoginButton = ({ onSuccess, onError, disabled = false }) => {
     androidClientId: __DEV__
       ? process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID_DEV  // Android 개발용
       : process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,     // Android 프로덕션용
-    // 네이티브 빌드용 scheme 설정 (개발/프로덕션 동일)
-    scopes: ['profile', 'email'],
-    redirectUri: 'rn-codequest://oauthredirect',
   });
 
   // 디버깅: OAuth 준비 상태 출력
