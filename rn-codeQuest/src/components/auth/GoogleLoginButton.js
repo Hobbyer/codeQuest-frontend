@@ -12,9 +12,18 @@ const GoogleLoginButton = ({ onSuccess, onError, disabled = false }) => {
 
   // Google OAuth 설정
   const [request, response, promptAsync] = Google.useAuthRequest({
+    // 웹은 항상 Web Client ID 사용
     clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    // 개발/프로덕션에 따라 다른 Client ID 사용
+    iosClientId: __DEV__ 
+      ? process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID_DEV    // iOS 개발용
+      : process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,       // iOS 프로덕션용
+    androidClientId: __DEV__
+      ? process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID_DEV  // Android 개발용
+      : process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,     // Android 프로덕션용
+    // 네이티브 빌드용 scheme 설정 (개발/프로덕션 동일)
+    scopes: ['profile', 'email'],
+    redirectUri: 'rn-codequest://oauthredirect',
   });
 
   // 디버깅: OAuth 준비 상태 출력
