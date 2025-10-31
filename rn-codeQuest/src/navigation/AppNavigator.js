@@ -32,6 +32,7 @@ const AppNavigator = () => {
         <>
           <Stack.Screen name="Profile" component={ProfileScreen} />
           {/* 추후 추가 화면들 (설정, 내 정보 수정 등) */}
+          {/* <Stack.Screen name="랭크" component={""} /> */}
         </>
       ) : (
         // 비로그인 상태 - 인증 화면들만 접근 가능
