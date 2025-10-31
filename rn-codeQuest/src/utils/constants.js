@@ -1,8 +1,25 @@
-// API Base URL
-// export const API_BASE_URL = 'http://192.168.0.24:8000'; // Kim's Local IP
-export const API_BASE_URL = "http://192.0.0.2:8000"; // Lumi's Local IP
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-// export const API_BASE_URL = 'https://codequest.co.kr'; // 실제 운영 서버
+// API Base URL
+const getApiBaseUrl = () => {
+  if (!__DEV__) {
+    // 프로덕션
+    return 'https://api.codequest.com';
+  }
+  
+  if (Platform.OS === 'web') {
+    // 웹은 localhost
+    return 'http://localhost:8000';
+  }
+  
+  // 모바일 개발 환경 - 동적 IP
+  const hostUri = Constants.expoConfig?.hostUri;
+  const ip = hostUri?.split(':')[0]; // "10.199.106.165:8081" → "10.199.106.165"
+  return `http://${ip}:8000`;
+};
+export const API_BASE_URL = getApiBaseUrl();
+
 
 // App dimensions
 export const SCREEN_WIDTH = 375;
