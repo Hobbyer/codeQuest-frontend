@@ -3,10 +3,28 @@
 ## 🎯 목표
 React Native 앱에서 Google 소셜 로그인을 사용하기 위해 **3개의 클라이언트 ID**를 발급받습니다.
 
+## ⚠️ 중요: 네이티브 빌드 권장!
+
+### 실제 작동 환경
+
+| 환경 | 작동 여부 | 이유 |
+|------|----------|------|
+| **Web 브라우저** | ✅ 완벽 작동 | localhost redirect URI 지원 |
+| **Expo Go (Android)** | ❌ 작동 안 됨 | redirect URI가 `exp://192.168.0.24:8081` (IP 주소) 형태로 생성되어 Google이 거부 |
+| **Expo Go (iOS)** | ❌ 작동 안 됨 | 동일한 문제 |
+| **네이티브 빌드** | ✅ 완벽 작동 | 올바른 redirect URI 사용 |
+
+> 💡 **권장**: 웹에서 먼저 테스트하고, 모바일은 **네이티브 빌드**로 테스트하세요!
+> 
+> ```powershell
+> npx expo run:android  # Android 네이티브 빌드
+> npx expo run:ios      # iOS 네이티브 빌드
+> ```
+
 ### 왜 3개가 필요한가?
-- **Web Client ID**: Expo Go 개발 환경, 웹 브라우저에서 실행할 때
-- **iOS Client ID**: iOS 기기 및 시뮬레이터에서 실행할 때
-- **Android Client ID**: Android 기기 및 에뮬레이터에서 실행할 때
+- **Web Client ID**: 웹 브라우저에서 실행할 때
+- **iOS Client ID**: iOS 네이티브 빌드에서 실행할 때
+- **Android Client ID**: Android 네이티브 빌드에서 실행할 때
 
 ---
 
@@ -233,3 +251,310 @@ npm start
 - [Expo Auth Session 공식 문서](https://docs.expo.dev/guides/authentication/#google)
 - [Google Cloud Console](https://console.cloud.google.com/)
 - [OAuth 2.0 설명](https://developers.google.com/identity/protocols/oauth2)
+
+---
+
+## 💡 OAuth 로그인 처리 로직 이해하기
+
+### 전체 플로우 (Google 예시)
+
+```
+사용자                앱                  Google 서버          우리 백엔드
+  |                  |                     |                    |
+  | 1. 로그인 버튼 클릭 |                     |                    |
+  |----------------->|                     |                    |
+  |                  | 2. Google 로그인 요청 |                    |
+  |                  |-------------------->|                    |
+  |                  |                     |                    |
+  |                  | 3. 로그인 화면 표시  |                    |
+  |                  |<--------------------|                    |
+  |                  |                     |                    |
+  | 4. Google 계정 선택                     |                    |
+  |------------------------------------>|                    |
+  |                  |                     |                    |
+  |                  | 5. Access Token 발급 |                    |
+  |                  |<--------------------|                    |
+  |                  |                     |                    |
+  |                  | 6. Access Token 전송 |                    |
+  |                  |------------------------------------>|
+  |                  |                     |                    |
+  |                  |                7. JWT 토큰 발급         |
+  |                  |<------------------------------------|
+  |                  |                     |                    |
+  | 8. 로그인 완료     |                     |                    |
+  |<-----------------|                     |                    |
+```
+
+### 상세 단계별 설명
+
+#### 1️⃣ 사용자가 "Google로 로그인" 버튼 클릭
+```javascript
+// LoginScreen.js
+<TouchableOpacity onPress={() => promptAsync()}>
+  <Text>🔵 Google로 로그인</Text>
+</TouchableOpacity>
+```
+
+#### 2️⃣ 앱이 Google OAuth 화면 열기
+```javascript
+// expo-auth-session 사용
+import * as Google from 'expo-auth-session/providers/google';
+
+const [request, response, promptAsync] = Google.useAuthRequest({
+  clientId: GOOGLE_WEB_CLIENT_ID,
+  iosClientId: GOOGLE_IOS_CLIENT_ID,
+  androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+});
+
+// promptAsync() 호출 시 Google 로그인 웹뷰 열림
+```
+
+#### 3️⃣ Google 로그인 페이지 표시
+- **웹**: 팝업 창으로 Google 로그인 페이지
+- **모바일**: 인앱 브라우저(WebView)로 Google 로그인 페이지
+- Google 계정 목록이 표시됨
+
+#### 4️⃣ 사용자가 Google 계정 선택 및 권한 승인
+- Google 계정 선택
+- 앱이 요청하는 권한(이메일, 프로필) 확인 및 승인
+
+#### 5️⃣ Google이 Access Token 발급
+```javascript
+// Google 로그인 성공 시 받는 정보
+{
+  type: 'success',
+  authentication: {
+    accessToken: "ya29.a0AfH6SMB...",  // Google Access Token
+    refreshToken: "1//0e...",           // Google Refresh Token
+    expiresIn: 3599,                    // 만료 시간 (초)
+    tokenType: "Bearer"
+  }
+}
+```
+
+#### 6️⃣ 앱이 Access Token을 우리 백엔드로 전송
+```javascript
+// src/apis/socialLogin.js
+export const loginWithGoogle = async (googleAccessToken) => {
+  const deviceInfo = await DeviceInfoService.getDeviceInfo();
+  
+  const response = await api.post('/auth/social/login/', {
+    provider: 'google',
+    access_token: googleAccessToken,  // Google에서 받은 토큰
+    device_id: deviceInfo.deviceId,
+    device_name: deviceInfo.deviceName,
+  });
+  
+  return response;
+};
+```
+
+#### 7️⃣ 백엔드가 Google 토큰 검증 후 JWT 발급
+```python
+# Django 백엔드 (예시)
+# 1. Google Access Token으로 사용자 정보 조회
+google_user_info = requests.get(
+    'https://www.googleapis.com/oauth2/v1/userinfo',
+    headers={'Authorization': f'Bearer {access_token}'}
+).json()
+
+# 2. 우리 DB에서 사용자 찾기 또는 생성
+user, created = User.objects.get_or_create(
+    email=google_user_info['email'],
+    defaults={
+        'nickname': google_user_info['name'],
+        'profile_image': google_user_info['picture']
+    }
+)
+
+# 3. JWT 토큰 생성
+jwt_token = create_jwt_token(user)
+
+# 4. 응답
+return {
+    'access': jwt_token,
+    'refresh': refresh_token,
+    'user': user_data
+}
+```
+
+#### 8️⃣ 앱이 JWT 토큰 저장 및 로그인 완료
+```javascript
+// AuthContext.js
+const socialLogin = async (provider, token) => {
+  const result = await loginWithGoogle(token);
+  
+  if (result.success) {
+    // JWT 토큰 저장
+    await Storage.setSecure('AUTH_TOKENS', {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+    
+    // 사용자 정보 저장
+    await Storage.setUserInfo(result.user);
+    
+    // 상태 업데이트
+    setUser(result.user);
+    setIsAuthenticated(true);
+  }
+};
+```
+
+---
+
+### 핵심 개념 이해
+
+#### Access Token vs JWT Token
+
+| 구분 | Access Token (Google) | JWT Token (우리 백엔드) |
+|------|----------------------|------------------------|
+| 발급자 | Google 서버 | 우리 Django 백엔드 |
+| 용도 | Google API 호출용 | 우리 API 호출용 |
+| 유효기간 | Google이 정함 (보통 1시간) | 우리가 정함 (예: 7일) |
+| 저장 위치 | 백엔드로 즉시 전송 (저장 X) | 앱에 안전하게 저장 |
+
+#### 왜 Google 토큰을 우리 백엔드로 보내나요?
+
+1. **보안**: 사용자가 정말 Google로 로그인했는지 백엔드에서 검증
+2. **사용자 정보**: Google 토큰으로 사용자 프로필 조회
+3. **통일성**: 모든 로그인 방식(일반/Google/Kakao/Naver)에 대해 동일한 JWT 토큰 사용
+4. **권한 관리**: 우리 서비스의 권한을 JWT 토큰에 포함
+
+---
+
+### 코드로 보는 전체 흐름
+
+```javascript
+// LoginScreen.js 전체 흐름
+
+// 1. OAuth 설정
+const [request, response, promptAsync] = Google.useAuthRequest({
+  clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+});
+
+// 2. 응답 처리
+useEffect(() => {
+  if (response?.type === 'success') {
+    const { authentication } = response;
+    handleGoogleLogin(authentication.accessToken);
+  }
+}, [response]);
+
+// 3. 백엔드로 토큰 전송
+const handleGoogleLogin = async (googleAccessToken) => {
+  console.log('🔑 Google Access Token 받음:', googleAccessToken);
+  
+  const result = await socialLogin('google', googleAccessToken);
+  
+  if (result.success) {
+    console.log('✅ 로그인 성공!');
+    // AppNavigator가 자동으로 ProfileScreen으로 전환
+  }
+};
+```
+
+---
+
+### 개발 환경별 작동 여부
+
+| 특징 | Web 브라우저 | Expo Go | 네이티브 빌드 |
+|------|-------------|---------|---------------|
+| Google 로그인 | ✅ 완벽 작동 | ❌ redirect URI 문제 | ✅ 완벽 작동 |
+| 설정 난이도 | 쉬움 | 쉬움 | 중간 |
+| 테스트 속도 | 빠름 | 빠름 | 느림 (빌드 필요) |
+| Client ID | Web Client ID | Web Client ID | iOS/Android Client ID |
+| redirect URI | `localhost:8081` | `exp://IP주소:8081` ❌ | 앱 scheme 사용 ✅ |
+
+> ⚠️ **주의**: Expo Go의 redirect URI는 IP 주소 형태(`exp://192.168.0.24:8081`)로 생성되어 Google이 거부합니다.
+> 
+> **권장 개발 흐름**:
+> 1. 웹 브라우저에서 먼저 테스트 ✅
+> 2. 모바일은 네이티브 빌드로 테스트 ✅
+> 3. Expo Go는 Google 로그인 제외하고 다른 기능 테스트
+
+---
+
+### 디버깅 팁
+
+#### 각 단계별 로그 확인
+```javascript
+const handleGoogleLogin = async (googleAccessToken) => {
+  console.log('1️⃣ Google 로그인 시작');
+  console.log('2️⃣ Google Access Token:', googleAccessToken);
+  
+  const result = await socialLogin('google', googleAccessToken);
+  console.log('3️⃣ 백엔드 응답:', result);
+  
+  if (result.success) {
+    console.log('4️⃣ JWT 토큰:', result.accessToken);
+    console.log('5️⃣ 사용자 정보:', result.user);
+    console.log('6️⃣ 로그인 완료!');
+  }
+};
+```
+
+#### 자주 발생하는 에러와 해결
+
+**1. `redirect_uri_mismatch`**
+```
+원인: Redirect URI가 Google Cloud Console에 등록되지 않음
+해결: https://auth.expo.io/@YOUR_EXPO_USERNAME/rn-codeQuest 등록
+확인: npx expo whoami로 Expo 사용자명 확인
+```
+
+**2. `invalid_client`**
+```
+원인: Client ID가 잘못되었거나 복사 중 공백 포함
+해결: Client ID 전체(.apps.googleusercontent.com 포함) 복사
+```
+
+**3. 로그인 후 화면 전환 안 됨**
+```
+원인: isAuthenticated 상태가 업데이트되지 않음
+해결: AuthContext의 setIsAuthenticated(true) 호출 확인
+디버그: console.log로 상태 변화 추적
+```
+
+---
+
+### 보안 모범 사례
+
+#### 1. Client ID는 공개해도 괜찮습니다
+```javascript
+// ✅ OK: Client ID는 공개 정보
+const clientId = "123456789-abc123.apps.googleusercontent.com";
+```
+
+#### 2. 하지만 환경 변수 사용 권장
+```javascript
+// ✅ 더 좋음: .env 파일 사용
+const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+```
+
+#### 3. Access Token은 즉시 백엔드로 전송
+```javascript
+// ✅ OK: 받자마자 백엔드로 전송
+const { accessToken } = response.authentication;
+await socialLogin('google', accessToken);
+
+// ❌ NO: 앱에 저장하지 마세요
+await Storage.set('google_token', accessToken); // 이렇게 하지 마세요!
+```
+
+#### 4. JWT Token만 안전하게 저장
+```javascript
+// ✅ OK: 우리 JWT 토큰만 저장
+await Storage.setSecure('AUTH_TOKENS', {
+  accessToken: result.accessToken,  // 우리 백엔드의 JWT
+  refreshToken: result.refreshToken,
+});
+```
+
+---
+
+이제 Google OAuth의 모든 것을 이해하셨을 겁니다! 🎓
+다음은 Naver와 Kakao 로그인도 같은 방식으로 구현하면 됩니다.
+
