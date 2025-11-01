@@ -15,12 +15,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "bundleIdentifier": "com.codequestteam.codequest",
+      "bundleIdentifier": "com.codequest3.codequest",
       "buildNumber": "1.0.0",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.codequestteam.codequest",
+      "package": "com.codequest3.codequest",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
