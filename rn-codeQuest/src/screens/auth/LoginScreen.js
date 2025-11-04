@@ -4,8 +4,9 @@ import { Button, Card, TextInput, Divider } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { Alert } from 'react-native';
 
-// Google 로그인 컴포넌트 import
+// Google, Kakao 로그인 컴포넌트 import
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
+import KakaoLoginButton from '../../components/auth/KakaoLoginButton';
 
 const LoginScreen = ({ navigation }) => {
   const { login, isLoading } = useAuth();
@@ -90,16 +91,8 @@ const LoginScreen = ({ navigation }) => {
             disabled={isLoading}
           />
 
-          {/* Kakao 버튼 */}
-          <TouchableOpacity
-            style={[styles.socialButton, styles.kakaoButton]}
-            onPress={() => handleSocialLogin('Kakao')}
-            disabled={isLoading}
-          >
-            <Text style={[styles.socialButtonText, styles.kakaoText]}>
-              💬 Kakao로 로그인
-            </Text>
-          </TouchableOpacity>
+          {/* Kakao 버튼 - 분리된 컴포넌트 사용 */}
+          <KakaoLoginButton disabled={isLoading} />
 
           {/* Naver 버튼 */}
           <TouchableOpacity
@@ -175,12 +168,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  kakaoButton: {
-    backgroundColor: '#FEE500',
-  },
-  kakaoText: {
-    color: '#3C1E1E',
   },
   naverButton: {
     backgroundColor: '#03C75A',
