@@ -2,7 +2,7 @@
 // Keychain : 민감한 정보 저장에 사용
 // MMKV    : 일반 정보 저장에 사용
 
-let Keychain, mmkv;
+let Keychain, MMKV, storage;
 
 try {
   Keychain = require('react-native-keychain');
@@ -11,10 +11,13 @@ try {
 }
 
 try {
-  const { MMKV } = require('react-native-mmkv');
-  mmkv = new MMKV();  // 기본 인스턴스 생성
+  const MMKVModule = require('react-native-mmkv');
+  MMKV = MMKVModule.MMKV;
+  storage = new MMKV();
+  console.log('✅ MMKV 인스턴스 생성 성공');
 } catch (error) {
-  console.warn('MMKV 모듈 없음');
+  // Expo Go 환경에서는 MMKV 사용 불가 (NitroModules 미지원)
+  console.log('📱 Expo Go 환경: MMKV 사용 불가 - 이는 정상적인 동작입니다');
 }
 
 export default class MobileAdapter {
@@ -54,24 +57,28 @@ export default class MobileAdapter {
   // ===== 일반 저장소 =====
   
   setData(key, value) {
-    if (!mmkv) {  // ✅ undefined 체크
-      console.warn('MMKV 사용 불가');
+    if (!storage) {
+      // Expo Go 환경에서는 MMKV 사용 불가 - 이는 정상
       return;
     }
     
-    const processedValue = typeof value === 'object' 
-      ? JSON.stringify(value) 
-      : value;
-    
-    mmkv.set(key, processedValue);
+    try {
+      const processedValue = typeof value === 'object' 
+        ? JSON.stringify(value) 
+        : String(value);
+      
+      storage.set(key, processedValue);
+    } catch (error) {
+      console.error(`MMKV 저장 실패: ${key}`, error);
+    }
   }
 
   getData(key, defaultValue = null) {
-    if (!mmkv) return defaultValue;  // ✅ 안전한 처리
+    if (!storage) return defaultValue;  // ✅ MMKV storage 인스턴스 체크
     
     try {
-      const value = mmkv.getString(key);
-      if (!value) return defaultValue;
+      const value = storage.getString(key);
+      if (value === undefined || value === null) return defaultValue;
 
       try {
         return JSON.parse(value);
@@ -86,11 +93,10 @@ export default class MobileAdapter {
   }
 
   removeData(key) {
-    if (!mmkv) return;
+    if (!storage) return;
     
     try {
-      mmkv.delete(key);
-
+      storage.delete(key);
     } catch (error) {
       console.error(`MMKV 삭제 실패: ${key}`, error);
     }

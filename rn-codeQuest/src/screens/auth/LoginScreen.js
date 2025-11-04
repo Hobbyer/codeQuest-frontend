@@ -1,26 +1,41 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Button, Card, TextInput } from 'react-native-paper';
-import { useAuth } from '../../context/AuthContext.js'
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button, Card, TextInput, Divider } from 'react-native-paper';
+import { useAuth } from '../../context/AuthContext';
 import { Alert } from 'react-native';
-import api from '../../services/api.js';
 
-const LoginScreen = () => {
-  const { login, isLoading, user } = useAuth();
+// Google 로그인 컴포넌트 import
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
+
+const LoginScreen = ({ navigation }) => {
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // 일반 로그인
   const handleLogin = async () => {
-    // 비동기 작업 시뮬레이션
     const result = await login(email, password);
     if (result.success) {
-      // 홈탭으로 자동 이동
-      navigation.navigate('Home');
+      navigation.navigate('Profile');
     } else {
-      console.log('아이디와 비밀번호를 확인하세요.');
       Alert.alert('실패', '아이디와 비밀번호를 확인하세요.');
     }
+  };
+
+  // Google 로그인 성공 시 콜백
+  const handleGoogleSuccess = (result) => {
+    // 성공 시 추가 로직 (필요하면)
+    // AppNavigator가 자동으로 ProfileScreen 렌더링
+  };
+
+  // Google 로그인 실패 시 콜백
+  const handleGoogleError = (error) => {
+    // 에러 처리 (필요하면)
+  };
+
+  // Kakao, Naver 로그인 (나중에 구현)
+  const handleSocialLogin = async (provider) => {
+    Alert.alert('준비 중', `${provider} 로그인은 다음 단계에서 구현할게요!`);
   };
 
   return (
@@ -28,12 +43,15 @@ const LoginScreen = () => {
       <Card style={styles.card}>
         <Card.Title title="로그인" />
         <Card.Content>
+          {/* 이메일/비밀번호 입력 */}
           <TextInput
             label="email"
             value={email}
             onChangeText={setEmail}
             mode="outlined"
             style={styles.input}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
           <TextInput
             label="비밀번호"
@@ -43,6 +61,8 @@ const LoginScreen = () => {
             secureTextEntry
             style={styles.input}
           />
+          
+          {/* 일반 로그인 버튼 */}
           <Button
             mode="contained" 
             onPress={handleLogin}
@@ -52,12 +72,56 @@ const LoginScreen = () => {
           >
             로그인
           </Button>
+
+          {/* 구분선 */}
+          <View style={styles.dividerContainer}>
+            <Divider style={styles.divider} />
+            <Text style={styles.dividerText}>또는</Text>
+            <Divider style={styles.divider} />
+          </View>
+
+          {/* 소셜 로그인 버튼들 */}
+          <Text style={styles.socialTitle}>소셜 로그인</Text>
+
+          {/* Google 버튼 - 분리된 컴포넌트 사용 */}
+          <GoogleLoginButton 
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            disabled={isLoading}
+          />
+
+          {/* Kakao 버튼 */}
+          <TouchableOpacity
+            style={[styles.socialButton, styles.kakaoButton]}
+            onPress={() => handleSocialLogin('Kakao')}
+            disabled={isLoading}
+          >
+            <Text style={[styles.socialButtonText, styles.kakaoText]}>
+              💬 Kakao로 로그인
+            </Text>
+          </TouchableOpacity>
+
+          {/* Naver 버튼 */}
+          <TouchableOpacity
+            style={[styles.socialButton, styles.naverButton]}
+            onPress={() => handleSocialLogin('Naver')}
+            disabled={isLoading}
+          >
+            <Text style={styles.socialButtonText}>🟢 Naver로 로그인</Text>
+          </TouchableOpacity>
+
+          {/* 회원가입 링크 */}
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>아직 계정이 없으신가요? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.registerLink}>회원가입</Text>
+            </TouchableOpacity>
+          </View>
         </Card.Content>
       </Card>
     </View>
   );
 };
-
 
 export default LoginScreen;
 
@@ -71,11 +135,69 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
+    maxWidth: 400,
   },
   input: {
     marginBottom: 16,
   },
   button: {
     marginTop: 8,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  divider: {
+    flex: 1,
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#666',
+    fontSize: 14,
+  },
+  socialTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#333',
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  socialButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  kakaoButton: {
+    backgroundColor: '#FEE500',
+  },
+  kakaoText: {
+    color: '#3C1E1E',
+  },
+  naverButton: {
+    backgroundColor: '#03C75A',
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  registerText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  registerLink: {
+    fontSize: 14,
+    color: '#6200ee',
+    fontWeight: '600',
   },
 });

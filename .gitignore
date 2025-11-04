@@ -3,6 +3,10 @@
 # dependencies
 node_modules/
 
+# github
+*.github/
+.github/
+
 # Expo
 .expo/
 dist/
@@ -39,6 +43,8 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
+*/ios
+*/android
 /ios
 /android
 

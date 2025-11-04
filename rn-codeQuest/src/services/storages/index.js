@@ -6,14 +6,26 @@
 import { Platform } from "react-native";
 import WebAdapter from "./adapters/web";
 import MobileAdapter from "./adapters/mobile";
+import ExpoAdapter from "./adapters/expo";
 import { StorageKeys } from "./types";
 
 class StorageManager {
   // 접속 환경에 따른 어댑터 선택
   constructor() { 
-    this.adapter = Platform.OS === 'web'
-      ? new WebAdapter()
-      : new MobileAdapter();
+    if (Platform.OS === 'web') {
+      this.adapter = new WebAdapter();
+    } else {
+      // 네이티브 모듈 사용 가능 여부 확인
+      try {
+        require('react-native-keychain');
+        require('react-native-mmkv');
+        this.adapter = new MobileAdapter();
+        console.log('✅ 네이티브 저장소 어댑터 사용');
+      } catch (error) {
+        this.adapter = new ExpoAdapter();
+        console.log('📱 Expo Go 저장소 어댑터 사용 (AsyncStorage)');
+      }
+    }
 
     this.keys = StorageKeys;
   }
@@ -111,4 +123,4 @@ class StorageManager {
   }
 }
 
-export default Storage = new StorageManager();
+export const Storage = new StorageManager();
