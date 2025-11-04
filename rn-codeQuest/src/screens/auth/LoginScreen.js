@@ -17,16 +17,17 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     const result = await login(email, password);
     if (result.success) {
-      navigation.navigate('Profile');
+      // 로그인 성공 시 이전 화면으로 돌아가기 (Home으로)
+      navigation.goBack();
     } else {
-      Alert.alert('실패', '아이디와 비밀번호를 확인하세요.');
+      Alert.alert('로그인 실패', result.error || '아이디와 비밀번호를 확인하세요.');
     }
   };
 
   // Google 로그인 성공 시 콜백
   const handleGoogleSuccess = (result) => {
-    // 성공 시 추가 로직 (필요하면)
-    // AppNavigator가 자동으로 ProfileScreen 렌더링
+    // 성공 시 이전 화면으로 돌아가기
+    navigation.goBack();
   };
 
   // Google 로그인 실패 시 콜백
