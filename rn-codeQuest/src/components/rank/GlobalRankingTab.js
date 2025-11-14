@@ -7,8 +7,9 @@
 import { RefreshControl, StyleSheet, Text, View } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import rankingService from '../../services/rank/rankingService';
-import { ActivityIndicator, Searchbar, Surface } from 'react-native-paper';
+import { ActivityIndicator, Chip, Searchbar, Surface } from 'react-native-paper';
 import { FlatList } from 'react-native-web';
+import { Storage } from '../../services/storages';
 
 const GlobalRankingTab = () => {
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ const GlobalRankingTab = () => {
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        const userInfo = await Storage.get('USER_INFO');
+        const userInfo = await Storage.getData('USER_INFO');
         if (userInfo) {
           setUserId(userInfo.user_id);
         }
